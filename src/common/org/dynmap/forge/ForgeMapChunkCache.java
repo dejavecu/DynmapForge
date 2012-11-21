@@ -27,6 +27,8 @@ import org.dynmap.DynmapCore;
 import org.dynmap.DynmapWorld;
 import org.dynmap.Log;
 import org.dynmap.common.BiomeMap;
+import org.dynmap.hdmap.HDBlockModels;
+import org.dynmap.renderer.RenderPatchFactory;
 import org.dynmap.utils.MapChunkCache;
 import org.dynmap.utils.MapIterator;
 import org.dynmap.utils.BlockStep;
@@ -771,6 +773,43 @@ public class ForgeMapChunkCache implements MapChunkCache
         public double getRawBiomeTemperature()
         {
             return 0;
+        }
+        @Override
+        public RenderPatchFactory getPatchFactory() {
+            return HDBlockModels.getPatchDefinitionFactory();
+        }
+        @Override
+        public Object getBlockTileEntityField(String fieldId) {
+            return null;
+        }
+        @Override
+        public int getBlockTypeIDAt(int xoff, int yoff, int zoff) {
+            int xx = this.x + xoff;
+            int yy = this.y + yoff;
+            int zz = this.z + zoff;
+            int idx = ((xx >> 4) - x_min) + (((zz >> 4) - z_min) * x_dim);
+            try {
+                return snaparray[idx].getBlockTypeId(xx & 0xF, yy, zz & 0xF);
+            } catch (Exception x) {
+                return 0;
+            }
+        }
+        @Override
+        public int getBlockDataAt(int xoff, int yoff, int zoff) {
+            int xx = this.x + xoff;
+            int yy = this.y + yoff;
+            int zz = this.z + zoff;
+            int idx = ((xx >> 4) - x_min) + (((zz >> 4) - z_min) * x_dim);
+            try {
+                return snaparray[idx].getBlockData(xx & 0xF, yy, zz & 0xF);
+            } catch (Exception x) {
+                return 0;
+            }
+        }
+        @Override
+        public Object getBlockTileEntityFieldAt(String fieldId, int xoff,
+                int yoff, int zoff) {
+            return null;
         }
     }
 
