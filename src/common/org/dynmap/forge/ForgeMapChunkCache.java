@@ -43,28 +43,14 @@ public class ForgeMapChunkCache extends CoreMapChunkCache implements MapChunkCac
     private static Field updateEntityTick = null;
 
     private World w;
-    private DynmapWorld dw;
+
     private ChunkProviderServer cps;
     private int nsect;
-    private List<DynmapChunk> chunks;
-    private ListIterator<DynmapChunk> iterator;
-    private int x_min, x_max, z_min, z_max;
-    private int x_dim;
     private boolean biome, biomeraw, highesty, blockdata;
     private ChunkSnapshot[] snaparray; /* Index = (x-x_min) + ((z-z_min)*x_dim) */
     private byte[][] sameneighborbiomecnt;
     private BiomeMap[][] biomemap;
     private boolean[][] isSectionNotEmpty; /* Indexed by snapshot index, then by section index */
-
-    private int chunks_read;    /* Number of chunks actually loaded */
-    private int chunks_attempted;   /* Number of chunks attempted to load */
-    private long total_loadtime;    /* Total time loading chunks, in nanoseconds */
-
-    private long exceptions;
-
-    private static final BlockStep unstep[] = { BlockStep.X_MINUS, BlockStep.Y_MINUS, BlockStep.Z_MINUS,
-            BlockStep.X_PLUS, BlockStep.Y_PLUS, BlockStep.Z_PLUS
-                                              };
 
     private static BiomeMap[] biome_to_bmap;
 
