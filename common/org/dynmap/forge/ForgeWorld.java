@@ -186,6 +186,7 @@ public class ForgeWorld extends DynmapWorld
     	if(world != null) {
     		ForgeMapChunkCache c = new ForgeMapChunkCache();
     		c.setChunks(this, chunks);
+               c.setVisibilityParameters((DynmapWorld) this);
     		return c;
     	}
     	return null;
