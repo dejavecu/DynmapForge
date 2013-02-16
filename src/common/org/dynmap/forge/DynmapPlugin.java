@@ -461,27 +461,6 @@ public class DynmapPlugin
         {
             MapChunkCache c = w.getChunkCache(chunks);
 
-            if (w.visibility_limits != null)
-            {
-                for (MapChunkCache.VisibilityLimit limit: w.visibility_limits)
-                {
-                    c.setVisibleRange(limit);
-                }
-
-                c.setHiddenFillStyle(w.hiddenchunkstyle);
-                c.setAutoGenerateVisbileRanges(w.do_autogenerate);
-            }
-
-            if (w.hidden_limits != null)
-            {
-                for (MapChunkCache.VisibilityLimit limit: w.hidden_limits)
-                {
-                    c.setHiddenRange(limit);
-                }
-
-                c.setHiddenFillStyle(w.hiddenchunkstyle);
-            }
-
             if (c.setChunkDataTypes(blockdata, biome, highesty, rawbiome) == false)
             {
                 Log.severe("CraftBukkit build does not support biome APIs");
