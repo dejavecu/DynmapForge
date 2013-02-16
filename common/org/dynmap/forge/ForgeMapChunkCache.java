@@ -45,6 +45,7 @@ import org.dynmap.hdmap.HDBlockModels;
 import org.dynmap.renderer.RenderPatchFactory;
 import org.dynmap.utils.DynIntHashMap;
 import org.dynmap.utils.MapChunkCache;
+import org.dynmap.utils.CoreMapChunkCache;
 import org.dynmap.utils.MapIterator;
 import org.dynmap.utils.BlockStep;
 import org.dynmap.utils.MapChunkCache.HiddenChunkStyle;
@@ -53,7 +54,7 @@ import org.dynmap.utils.MapChunkCache.VisibilityLimit;
 /**
  * Container for managing chunks - dependent upon using chunk snapshots, since rendering is off server thread
  */
-public class ForgeMapChunkCache implements MapChunkCache
+public class ForgeMapChunkCache extends CoreMapChunkCache implements MapChunkCache
 {
     private static boolean init = false;
     private static Field unloadqueue = null;
@@ -78,12 +79,6 @@ public class ForgeMapChunkCache implements MapChunkCache
     private int x_min, x_max, z_min, z_max;
     private int x_dim;
     private boolean biome, biomeraw, highesty, blockdata;
-    private HiddenChunkStyle hidestyle = HiddenChunkStyle.FILL_AIR;
-    private List<VisibilityLimit> visible_limits = null;
-    private List<VisibilityLimit> hidden_limits = null;
-    private boolean do_generate = false;
-    private boolean do_save = false;
-    private boolean isempty = true;
     private ChunkSnapshot[] snaparray; /* Index = (x-x_min) + ((z-z_min)*x_dim) */
     private DynIntHashMap[] snaptile;
     private byte[][] sameneighborbiomecnt;
@@ -1260,33 +1255,7 @@ public class ForgeMapChunkCache implements MapChunkCache
         while ((cnt < max_to_load) && iterator.hasNext())
         {
             DynmapChunk chunk = iterator.next();
-            boolean vis = true;
-
-            if (visible_limits != null)
-            {
-                vis = false;
-
-                for (VisibilityLimit limit : visible_limits)
-                {
-                    if ((chunk.x >= limit.x0) && (chunk.x <= limit.x1) && (chunk.z >= limit.z0) && (chunk.z <= limit.z1))
-                    {
-                        vis = true;
-                        break;
-                    }
-                }
-            }
-
-            if (vis && (hidden_limits != null))
-            {
-                for (VisibilityLimit limit : hidden_limits)
-                {
-                    if ((chunk.x >= limit.x0) && (chunk.x <= limit.x1) && (chunk.z >= limit.z0) && (chunk.z <= limit.z1))
-                    {
-                        vis = false;
-                        break;
-                    }
-                }
-            }
+            boolean vis = isChunkVisible(chunk);
 
             /* Check if cached chunk snapshot found */
             ChunkSnapshot ss = null;
@@ -1663,103 +1632,7 @@ public class ForgeMapChunkCache implements MapChunkCache
 
         return new OurMapIterator(x, y, z);
     }
-    /**
-     * Set hidden chunk style (default is FILL_AIR)
-     */
-    public void setHiddenFillStyle(HiddenChunkStyle style)
-    {
-        this.hidestyle = style;
-    }
-    /**
-     * Set autogenerate - must be done after at least one visible range has been set
-     */
-    public void setAutoGenerateVisbileRanges(DynmapWorld.AutoGenerateOption generateopt)
-    {
-        if ((generateopt != DynmapWorld.AutoGenerateOption.NONE) && ((visible_limits == null) || (visible_limits.size() == 0)))
-        {
-            Log.severe("Cannot setAutoGenerateVisibleRanges() without visible ranges defined");
-            return;
-        }
 
-        this.do_generate = (generateopt != DynmapWorld.AutoGenerateOption.NONE);
-        this.do_save = (generateopt == DynmapWorld.AutoGenerateOption.PERMANENT);
-    }
-    /**
-     * Add visible area limit - can be called more than once
-     * Needs to be set before chunks are loaded
-     * Coordinates are block coordinates
-     */
-    public void setVisibleRange(VisibilityLimit lim)
-    {
-        VisibilityLimit limit = new VisibilityLimit();
-
-        if (lim.x0 > lim.x1)
-        {
-            limit.x0 = (lim.x1 >> 4);
-            limit.x1 = ((lim.x0 + 15) >> 4);
-        }
-        else
-        {
-            limit.x0 = (lim.x0 >> 4);
-            limit.x1 = ((lim.x1 + 15) >> 4);
-        }
-
-        if (lim.z0 > lim.z1)
-        {
-            limit.z0 = (lim.z1 >> 4);
-            limit.z1 = ((lim.z0 + 15) >> 4);
-        }
-        else
-        {
-            limit.z0 = (lim.z0 >> 4);
-            limit.z1 = ((lim.z1 + 15) >> 4);
-        }
-
-        if (visible_limits == null)
-        {
-            visible_limits = new ArrayList<VisibilityLimit>();
-        }
-
-        visible_limits.add(limit);
-    }
-    /**
-     * Add hidden area limit - can be called more than once
-     * Needs to be set before chunks are loaded
-     * Coordinates are block coordinates
-     */
-    public void setHiddenRange(VisibilityLimit lim)
-    {
-        VisibilityLimit limit = new VisibilityLimit();
-
-        if (lim.x0 > lim.x1)
-        {
-            limit.x0 = (lim.x1 >> 4);
-            limit.x1 = ((lim.x0 + 15) >> 4);
-        }
-        else
-        {
-            limit.x0 = (lim.x0 >> 4);
-            limit.x1 = ((lim.x1 + 15) >> 4);
-        }
-
-        if (lim.z0 > lim.z1)
-        {
-            limit.z0 = (lim.z1 >> 4);
-            limit.z1 = ((lim.z0 + 15) >> 4);
-        }
-        else
-        {
-            limit.z0 = (lim.z0 >> 4);
-            limit.z1 = ((lim.z1 + 15) >> 4);
-        }
-
-        if (hidden_limits == null)
-        {
-            hidden_limits = new ArrayList<VisibilityLimit>();
-        }
-
-        hidden_limits.add(limit);
-    }
     @Override
     public boolean setChunkDataTypes(boolean blockdata, boolean biome, boolean highestblocky, boolean rawbiome)
     {
